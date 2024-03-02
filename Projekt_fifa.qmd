@@ -1,0 +1,884 @@
+---
+title: "Top 30 zawodników w FIFA 2023"
+author: "Szymon Gazdowicz"
+date: today
+lang: pl
+format:
+  html: 
+    warning: false
+    message: false
+    echo: false
+    self-contained: true
+editor: visual
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r}
+library(dplyr)
+library(rvest)
+library(gt)
+library(knitr)
+library(readr)
+library(tidyverse)
+library(countrycode)
+library(kableExtra)
+library(formattable)
+library(igraph)
+library(plotly)
+library(palr)
+library(scales)
+library(ggimage)
+library(forcats)
+library(readxl)
+```
+
+```{r}
+link="https://www.fifaratings.com/players"
+page=read_html(link)
+```
+
+```{r}
+Id1=page%>% html_nodes(".counter") %>% html_text()%>% parse_number()
+Id=Id1[1:30]
+
+```
+
+```{r}
+Player1=page %>% html_nodes(".entry-font-narrow a") %>% html_text()
+Player=Player1[1:30]
+```
+
+```{r}
+Team1=page %>% html_nodes(".text-dark") %>% html_text()
+Team=Team1[1:30]
+
+```
+
+```{r}
+Pozycja_spacja=page %>% html_nodes(".entry-subtext-font a") %>% html_text() 
+Pozycja1=str_squish(Pozycja_spacja)
+Position=Pozycja1[1:30]
+```
+
+```{r}
+Overall1=page %>% html_nodes("td:nth-child(3) .attribute-box") %>% html_text()%>% parse_number()
+Overall=Overall1[1:30]
+```
+
+```{r}
+Potential1=page %>% html_nodes("td:nth-child(4) .attribute-box") %>% html_text()%>% parse_number()
+Potential=Potential1[1:30]
+```
+
+```{r}
+Attacking1=page %>% html_nodes("td:nth-child(5) .attribute-box") %>% html_text()%>% parse_number()
+Attacking=Attacking1[1:30]
+```
+
+```{r}
+Skill1=page %>% html_nodes("td:nth-child(6) .attribute-box") %>% html_text()%>% parse_number()
+Skill=Skill1[1:30]
+```
+
+```{r}
+Movement1=Umiejętności=page %>% html_nodes("td:nth-child(7) .attribute-box") %>% html_text()%>% parse_number()
+Movement=Movement1[1:30]
+```
+
+```{r}
+Power1=page %>% html_nodes("td:nth-child(8) .attribute-box") %>% html_text()%>% parse_number()
+Power=Power1[1:30]
+```
+
+```{r}
+Mentality1=page %>% html_nodes("td:nth-child(9) .attribute-box") %>% html_text()%>% parse_number()
+Mentality=Mentality1[1:30]
+```
+
+```{r}
+Defending1=page %>% html_nodes("td:nth-child(10) .attribute-box") %>% html_text()%>% parse_number()
+Defending=Defending1[1:30]
+```
+
+```{r}
+Goalkeeping1=page %>% html_nodes("td:nth-child(11) .attribute-box") %>% html_text()%>% parse_number()
+Goalkeeping=Goalkeeping1[1:30]
+```
+
+```{r}
+Nar=page %>% html_nodes(".all-star-badge-list img")
+Country1=html_attr(Nar,"title") 
+Country=Country1[1:30]
+
+```
+
+```{r}
+avatar1=page %>% html_nodes(".entry-photo") 
+avatar=avatar1[1:30]
+link_avatar=html_attr(avatar,"data-src")
+test=include_graphics(link_avatar)
+
+
+
+```
+
+```{r}
+
+
+Wszystko=data.frame(Id,Player,Team,Country,Position,Overall,Potential,Attacking,Skill,Movement,Power,Mentality,Defending,Goalkeeping)
+
+podział_na_pozycje=Wszystko%>% mutate(Position=case_when(Position %in% c("ST","CF","GG") ~"Napastnik",TRUE ~ as.character(Position)))%>% mutate(Position=case_when(Position %in% c( "CM","CAM","CDM","LM","RM","LW","RW","LF","RF","LAW","RAW") ~"Pomocnik",TRUE ~ as.character(Position))) %>% mutate(Position=case_when(Position %in% c("CB","RB","LB","RB","RWB","LWB") ~"Obronca",TRUE ~ as.character(Position)))%>% mutate(Position=case_when(Position %in% c("GK") ~"Bramkarz",TRUE ~ as.character(Position)))
+
+
+Wszystko1=Wszystko %>%mutate(Country=case_when(Country %in% c("England","Scotland") ~"United Kingdom of Great Britain and Northern Ireland",TRUE ~ as.character(Country))) %>% mutate(podział_na_pozycje)
+skrót_country=countrycode(Wszystko1$Country,"country.name","iso2c")
+
+```
+
+```{r}
+Wszystko1=Wszystko %>%mutate(Country=case_when(Country %in% c("England","Scotland") ~"United Kingdom of Great Britain and Northern Ireland",TRUE ~ as.character(Country)))
+```
+
+```{r}
+skrót_country=countrycode(Wszystko1$Country,"country.name","iso2c")
+```
+
+```{r}
+dtt=Wszystko1 %>% 
+  count(Country) %>% 
+  drop_na()
+skrót_country_dt=countrycode(dtt$Country,"country.name","iso2c")
+dom1=dtt %>% mutate(skrót_country_dt)
+dom=dom1 %>% mutate(Country=case_when(Country %in% "United Kingdom of Great Britain and Northern Ireland" ~"England",TRUE ~ as.character(Country)))%>% arrange(desc(n)) %>% rename(Number=n)
+```
+
+```{r}
+podział_na_pozycje=Wszystko%>% mutate(Position=case_when(Position %in% c("ST","CF","GG") ~"Napastnik",TRUE ~ as.character(Position)))%>% mutate(Position=case_when(Position %in% c( "CM","CAM","CDM","LM","RM","LW","RW","LF","RF","LAW","RAW") ~"Pomocnik",TRUE ~ as.character(Position))) %>% mutate(Position=case_when(Position %in% c("CB","RB","LB","RB","RWB","LWB") ~"Obronca",TRUE ~ as.character(Position)))%>% mutate(Position=case_when(Position %in% c("GK") ~"Bramkarz",TRUE ~ as.character(Position)))
+
+```
+
+```{r}
+dtt=Wszystko1 %>% 
+  count(Country) %>% 
+  drop_na()
+skrót_country_dt=countrycode(dtt$Country,"country.name","iso2c")
+dom1=dtt %>% mutate(skrót_country_dt)
+dom=dom1 %>% mutate(Country=case_when(Country %in% "United Kingdom of Great Britain and Northern Ireland" ~"England",TRUE ~ as.character(Country)))%>% arrange(desc(n)) %>% rename(Number=n)
+
+```
+
+# FIFA 2023 
+
+![](fifa2.png){fig-align="center" width="694"}
+
+FIFA 23 to kolejna odsłona popularnej serii gier piłkarskich stworzonej przez EA Sports. Jest to symulacja piłki nożnej, która pozwala graczom na granie jako ich ulubiona drużyna lub piłkarz, a także na kierowanie swoimi wirtualnymi drużynami w rozgrywkach ligowych, pucharowych i reprezentacyjnych. FIFA 23 zapewnia realistyczne odwzorowanie boiska, drużyn i piłkarzy oraz oferuje rozległe możliwości zarządzania drużynami i transferami. Gra ta jest uważana przez wielu graczy za jedną z najlepszych symulacji piłki nożnej na rynku i cieszy się dużą popularnością na całym świecie.
+
+# Top 30 piłkarzy w FIFA 23
+
+## Overall:
+
+***Overall***-jest statystyką w grze FIFA 23, która określa ogólną jakość piłkarza. Jest to liczba od 0 do 100, która jest obliczana na podstawie różnych innych statystyk piłkarza, takich jak siła, szybkość, umiejętności techniczne, umiejętności strzeleckie itp. Overall jest używany jako wskaźnik ogólnej jakości piłkarza i jest używany przez graczy do porównywania piłkarzy między sobą lub do określenia jak dobrze dana drużyna będzie działać w grze. Overall jest podawany w zakresie od 0 do 100, z czego wyższa wartość oznacza lepszego piłkarza.Poniższa tabela przedstawia najlepszych piłkarzy we względu na własnie tą statystykę.
+
+```{r}
+#| label: tbl-tabela2
+#| tbl-cap: Top 30 Zawodników w FIFA 23
+
+test11= tibble(
+Id,
+Avatar = 80,
+Player,
+Team,
+Country,
+Overall
+) %>%
+  gt(rowname_col = "row",groupname_col = "group") %>%
+  text_transform(
+    locations = cells_body(columns = Avatar),
+    fn = function(x) {
+      web_image(
+        url = link_avatar,
+        height = as.numeric(x)
+      )
+    }
+  ) %>% 
+  opt_stylize(style = 2) %>% 
+  data_color(columns = Id,colors = "#38AFC1") %>% 
+   tab_style(
+    style = cell_text(size = px(10)),
+    locations = cells_body()
+  ) %>%
+   tab_style(
+     style = cell_fill(color="#0354F6"),locations = cells_column_labels(columns = everything())
+
+  )%>% 
+   tab_style(
+    style = cell_text(size = px(12)),
+    locations = cells_column_labels()
+  )%>%
+  cols_align(
+    align = "center"
+  ) 
+test11
+
+```
+
+## Szczegółowe statystyki piłkarzy
+
+Statystyki szczegółowe w grze FIFA 23 oznaczają różne cechy i umiejętności piłkarzy. Są one reprezentowane przez liczby i oceny, które określają jak dobry jest dany piłkarz w różnych aspektach gry, takich jak potencjał,atak,umiejętności,siła,mental itp. Te statystyki są używane do określenia jak dobrze dany piłkarz będzie działał w grze i jakie umiejętności będzie miał. Poniższy wykres pokazuje szczegółowe statystki które brane są pod uwagę przy ogólnej ocenie piłkarza(Overall)
+
+```{r}
+statystyki=data.frame(Id,Player,Potential,Attacking,Skill,Movement,Power,Mentality,Defending,Goalkeeping)
+
+```
+
+```{r}
+statystyki %>% 
+  gt %>% 
+   tab_style(
+     style = cell_fill(color="#B22222"),locations = cells_column_labels(columns = everything())
+    
+  ) %>% 
+  tab_style(
+     style = cell_fill(color="#F08080"),locations = cells_body(columns = Id)
+    
+  )%>%
+  opt_stylize(style = 6,color = "blue")%>% 
+   tab_style(
+    style = cell_text(size = px(14)),
+    locations = cells_column_labels()
+  )%>% 
+   tab_style(
+    style = cell_text(size = px(12)),
+    locations = cells_body()
+  )
+```
+
+## 
+
+## Potential
+
+***Potential-** statystyka ta* odpowiada za potencjalną jakość piłkarza w przyszłości. Jest to liczba od 0 do 100, która określa, jak dobry piłkarz może stać się w przyszłości, jeśli będzie rozwijany i trenowany odpowiednio.
+
+```{r}
+#| label: fig-Potential
+#| fig-cap: Potential
+
+Potential_tabela=podział_na_pozycje %>%
+  arrange(-Potential)
+ Potential_wykres= ggplot(Potential_tabela[1:5,],aes(x=reorder(Player,Potential),y=Potential,fill=Position))+
+  geom_col(size=10,width = 0.5)+
+  geom_text(aes(label=Potential))+
+  labs(title = "Top 5 Potential",
+       title.x = element_text(vjust = 0.9),
+       y="Potencjał",
+       x="Gracz",
+       fill="Pozycja"
+       )+
+  theme(plot.title = element_text(hjust = 0.5))+
+  coord_flip()+
+  scale_y_continuous(breaks = seq(0,100,10))
+Potential_wykres
+```
+
+Na powyższym wykresie @fig-Potential widzimy graczy którzy posiadają największą wartość Potencjału.Na pierwszych 3 pozycjach uplasowali się piłkarze młodzi w wieku 21-23 lat mający duży potencjał i stale rozwijający się.
+
+## Attacking
+
+**Attacking-** statystyka ta odpowiada za umiejętności piłkarza w ofensywnej grze. Jest to zbiór statystyk, które określają jak dobry piłkarz jest w różnych aspektach ofensywnej gry, takich jak strzelanie, drybling, kreatywność, itp. Piłkarze, którzy są przeznaczeni do gry na pozycjach ofensywnych takich jak napastnicy, skrzydłowi, pomocnicy ofensywni, będą mieć wyższe wartości statystyki Attacking niż piłkarze przeznaczeni do gry w defensywie lub na pozycjach pomocniczych. Poniższy wykres @fig-Attacking przedstawia własnie to zjawisko.
+
+```{r}
+#| label: fig-Attacking
+#| fig-cap: Attacking
+Attacking_tabela=podział_na_pozycje %>%
+  arrange(-Attacking)
+ Attacking_wykres= ggplot(Attacking_tabela[1:5,],aes(x=reorder(Player,Attacking),y=Attacking,fill=Position))+
+  geom_col(size=10,width = 0.5)+
+  geom_text(aes(label=Attacking))+
+  labs(title = "Top 5 Attacking",
+       title.x = element_text(vjust = 0.9),
+       y="Atak",
+       x="Gracz",
+       fill="Pozycja"
+       )+
+  theme(plot.title = element_text(hjust = 0.5))+
+  coord_flip()+
+  scale_y_continuous(breaks = seq(0,100,10))
+Attacking_wykres
+```
+
+## 
+
+## Skill
+
+***Skill***- odpowiada za specjalistyczne umiejętności piłkarza, takie jak drybling, kontrola piłki, przyspieszanie, kreatywność, itp. Największe statystyki tej umiejętności mają piłkarze ofensywni ,kreujący grę grający przeważnie na pozycji pomocnika.W top 5 najlepszych piłkarzy @fig-Skill możemy znaleźć samych pomocników na czele z Lionelem Messim występującym obecnie na pozycji ofensywnego pomocnika.
+
+```{r}
+#| label: fig-Skill
+#| fig-cap: Skill
+Skill_tabela=podział_na_pozycje %>%
+  arrange(-Skill)
+ Skill_wykres= ggplot(Skill_tabela[1:5,],aes(x=reorder(Player,Skill),y=Skill,fill=Position))+
+  geom_col(size=10,width = 0.5)+
+  geom_text(aes(label=Skill))+
+  labs(title = "Top 5 Skill",
+       title.x = element_text(vjust = 0.9),
+       y="Umiejętnośći",
+       x="Gracz",
+       fill="Pozycja"
+       )+
+  theme(plot.title = element_text(hjust = 0.5))+
+  scale_y_continuous(breaks = seq(0,100,10))+
+    scale_fill_manual(values = sst_pal(nrow(Skill_tabela)))+
+  coord_flip()
+Skill_wykres
+```
+
+## 
+
+## Movement
+
+**Movement-** odpowiada za ruchliwość,zwinność piłkarza, czyli jego zdolność do poruszania się po boisku oraz jego szybkość i zwinność. Jest to zbiór statystyk, które określają jak szybko i skutecznie piłkarz porusza się po boisku, jak dobrze radzi sobie z przyspieszaniem i zmianą kierunku oraz jego zwinność.Podobnie jak z statystyką Skill największe wartości posiadają ofensywni pomocnicy @fig-Movement .
+
+```{r}
+#| label: fig-Movement
+#| fig-cap: Movement
+Movement_tabela=podział_na_pozycje %>%
+  arrange(-Movement)
+ Movement_wykres= ggplot(Skill_tabela[1:5,],aes(x=reorder(Player,Movement),y=Movement,fill=Position))+
+  geom_col(size=10,width = 0.5)+
+  geom_text(aes(label=Movement))+
+  labs(title = "Top 5 Movement",
+       title.x = element_text(vjust = 0.9),
+       y="Zwinność",
+       x="Gracz",
+       fill="Pozycja"
+       )+
+  theme(plot.title = element_text(hjust = 0.5))+
+  coord_flip()+
+  scale_y_continuous(breaks = seq(0,100,10))
+Movement_wykres
+```
+
+## Power
+
+***Power***- odpowiada za siłę fizyczną piłkarza, czyli jego zdolność do kontrolowania i przemieszczania piłki oraz jego wytrzymałość. Jest to zbiór statystyk, które określają jak silny jest piłkarz.Wśród Top 5 zawodników @fig-Power z tą cechą znaleźli się Casemiro, Erling Halland oraz Cristiano Ronaldo którzy rozpoznawani są miedzy innymi z swojej siły fizycznej i muskulatury. ![](Ronaldo.jpeg){width="300" height="200"}![](haaland.jpeg){width="331"}
+
+```{r}
+#| label: fig-Power
+#| fig-cap: Power
+power_tabela=podział_na_pozycje %>%
+  arrange(-Power)
+ power_wykres= ggplot(power_tabela[1:5,],aes(x=reorder(Player,Power),y=Power,fill=Position))+
+  geom_col(size=10,width = 0.5)+
+  geom_text(aes(label=Power))+
+  labs(title = "Top 5 Power",
+       title.x = element_text(vjust = 0.9),
+       y="Siła",
+       x="Gracz",
+       fill="Pozycja"
+       )+
+  theme(plot.title = element_text(hjust = 0.5))+
+  scale_y_continuous(breaks = seq(0,100,10))+
+    scale_fill_manual(values = sst_pal(nrow(power_tabela)))+
+  coord_flip()
+power_wykres
+```
+
+Poniższy wykres @fig-Power1 przedstawia statystykę siły u poszczególnych piłkarzy z podziałem na pozycje na których występują.Z wykresu możemy zauważyć ze największy parametr siły mają zawodnicy z pozycji ofensywnych gdzie wytrzymałość ,zwrotność i siła mają największą role. Niższa statystyka siły dla bramkarzy spowodowana jest tym, że bramkarze nie są oceniani tak samo jak inne pozycje na boisku, ponieważ ich głównym celem jest bronić bramki, a kondycja czy siła nie jest do tego potrzebna.
+
+```{r}
+#| label: fig-Power1
+#| fig-cap: Power1
+pp=podział_na_pozycje %>% ggplot(aes(x=Position,y=Power,color=Player))+
+  geom_point()+
+  geom_smooth(method=lm,se=F)+
+  labs(title = "Siła u Poszczególnych Graczy",
+       subtitle = "<3",
+       x="Siła",
+       y="Liczność",
+       fill="Pozycja",
+       color="Gracz")
+ggplotly(pp)
+```
+
+## 
+
+## Mentality
+
+**Mentality**-odpowiada za mentalność i zachowanie piłkarza na boisku.Określa jak piłkarz radzi sobie z presją, jego agresywność, jego determinację, jego skupienie oraz jego wpływ na drużynę.Największy parametr Mentality @fig-Mentality posiada Kevin de Bruyne będący w czołówce prawie każdej z wymienionych wyżej rankingów statystyk pokazuje to jak dobrym i uniwersalnym graczem jest piłkarz reprezentujący barwy Manchesteru City oraz reprezentacji Belgi.
+
+```{r}
+#| label: fig-Mentality
+#| fig-cap: Mentality
+Mentality_tabela=podział_na_pozycje %>%
+  arrange(-Mentality)
+ Mentality_wykres= ggplot(Mentality_tabela[1:5,],aes(x=reorder(Player,Mentality),y=Mentality,fill=Position))+
+  geom_col(size=0.1,width = 0.4)+
+  geom_text(aes(label=Mentality))+
+  labs(title = "Top 5 Mentality",
+       title.x = element_text(vjust = 0.9),
+       y="Psychika",
+       x="Gracz",
+       fill="Pozycja"
+       )+
+  theme(plot.title = element_text(hjust = 0.5))+
+  scale_y_continuous(breaks = seq(0,100,10))+
+    scale_fill_manual(values = sst_pal(nrow(Mentality_tabela)))+
+  coord_flip()
+Mentality_wykres
+```
+
+Poniższy wykres @fig-Mentality1 przedstawia rozkład Mentality w podziale na pozycje.Widzimy ze najsłabiej wypadają bramkarze ale jak wcześniej wspomniałem jest to uwarunkowane innym systemem oceniana bramkarzy w stosunku do innych pozycji.Wartości Mentality oscylują w okolicach 72-82 w pozycjach ofensywnych oraz 66-76 na pozycji obrońcy.
+
+```{r}
+#| label: fig-Mentality1
+#| fig-cap: Mentality1
+kotekk=podział_na_pozycje %>% ggplot(aes(Mentality,fill=Position))+
+  geom_histogram(color="white",binwidth = 2)+facet_wrap(~Position)+
+  theme(legend.position = c(0.5,0.5))+
+  labs(title="Histogram",
+         subtitle = "w podziale na Mental i jego wartości ",
+          x="Mental",
+          y="Liczność",
+          caption = "zródło:",
+          fill="Pozycja",
+       color="plec")
+ggplotly(kotekk)
+```
+
+## 
+
+## Defending
+
+Defending-odpowiada za umiejętności piłkarza w defensywnej grze. Jest to zbiór statystyk , które określają jak dobry piłkarz jest w różnych aspektach defensywnej gry, takich jak interwencje, blokowanie strzałów, krycie, itp. Piłkarze, którzy są przeznaczeni do gry na pozycjach defensywnych takich jak obrońcy, defensywni pomocnicy, będą mieć wyższe wartości statystyki Defending niż piłkarze przeznaczeni do gry na pozycjach ofensywnych @fig-Defending.
+
+```{r}
+#| label: fig-Defending
+#| fig-cap: Defending
+Defending_tabela=podział_na_pozycje %>%
+  arrange(-Defending)
+ Defending_wykres= ggplot(Defending_tabela[1:5,],aes(x=reorder(Player,Defending),y=Defending,fill=Position))+
+  geom_col(size=10,width = 0.5)+
+  geom_text(aes(label=Defending))+
+  labs(title = "Top 5 Defending",
+       title.x = element_text(vjust = 0.9),
+       y="Obrona",
+       x="Gracz",
+       fill="Pozycja"
+       )+
+  theme(plot.title = element_text(hjust = 0.5))+
+  scale_y_continuous(breaks = seq(0,100,10))+
+  coord_flip()
+Defending_wykres
+```
+
+## Goalkeeping
+
+***Goalkeeping-*** statystyka odpowiadająca za umiejętności bramkarza w grze. Jest to zbiór statystyk, które określają jak dobry bramkarz jest w różnych aspektach gry, takich jak interwencje, skuteczność, wyskoki, rzuty, itp. Poniższy wykres @fig-Goalkeeping przedstawia topowe umiejętności bramkarskie u poszczególnych graczy z podziałem na pozycje.
+
+Oczywiście piłkarze grający na pozycji bramkarza będą mieć najwyższą wartość statystyki Goalkeeping, ponieważ jest to kluczowa umiejętność dla tej pozycji.
+
+```{r}
+#| label: fig-Goalkeeping
+#| fig-cap: Goalkeeping
+podział_na_pozycje %>% 
+  arrange() %>% 
+  ggplot(aes(x=reorder(Player,Goalkeeping),y=Goalkeeping,fill=Position))+
+  geom_col(size=10,width = 0.5)+
+  geom_text(aes(label=Goalkeeping))+
+  labs(y="Umiejetności bramkarskie",
+       x="Gracz",
+       fill="Pozycja"
+       )+
+  coord_flip()+
+  scale_y_continuous(breaks = seq(0,100,10))
+```
+
+## 
+
+Sytuacja, w której zawodnik z pola musi stanąć na bramce, jest rzadko spotykana, ale jednocześnie jest to sytuacja awaryjna, która może zdarzyć się w każdym meczu piłki nożnej. Może się zdarzyć, że bramkarz zostaje zraniony lub ukarany czerwoną kartką, a drużyna nie ma już zmiennika bramkarza na ławce rezerwowych. W takiej sytuacji, trener drużyny musi szybko podejmować decyzję, kto z zawodników z pola zastąpi bramkarza.Poniższy wykres @fig-Goalkeeping1 przedstawia wykres z zawodnikami mającymi największe umiejętności bramkarskie nie wliczając w nich bramkarzy.
+
+```{r}
+#| label: fig-Goalkeeping1
+#| fig-cap: Goalkeeping1
+Goalkeeping_tabela_bez=podział_na_pozycje %>%
+  arrange(-Goalkeeping) %>% filter(Position!="Bramkarz")
+
+ Goalkeeping_wykres_bez= ggplot(Goalkeeping_tabela_bez[1:5,],aes(x=reorder(Player,Goalkeeping),y=Goalkeeping,fill=Position))+
+  geom_col(size=10,width = 0.5)+
+  geom_text(aes(label=Goalkeeping))+
+  labs(title = "Top 5 Goalkeeping without GK ",
+       title.x = element_text(vjust = 0.9),
+       y="Obrona bramki",
+       x="Gracz",
+       fill="Pozycja"
+       )+
+  theme(plot.title = element_text(hjust = 0.5))+
+  scale_y_continuous(breaks = seq(0,100,10))+
+  coord_flip()
+Goalkeeping_wykres_bez
+```
+
+```{r}
+
+```
+
+# Podział na Pozycje na boisku
+
+Podział na pozycje w piłce nożnej jest następujący:
+
+1.  Bramkarz
+
+2.  Obrońcy,
+
+3.  Pomocnicy,
+
+4.  Napastnicy.
+
+Bramkarz jest odpowiedzialny za bronią bramki, obrońcy za ochronę bramki i przechwytywanie piłki, pomocnicy za rozgrywanie piłki i tworzenie sytuacji strzeleckich, a napastnicy za zdobywanie bramek.
+Podział na pozycje możemy zobaczyc w @tbl-tabela3 
+
+```{r}
+podział_na_pozycje=Wszystko%>% mutate(Position=case_when(Position %in% c("ST","CF","GG") ~"Napastnik",TRUE ~ as.character(Position)))%>% mutate(Position=case_when(Position %in% c( "CM","CAM","CDM","LM","RM","LW","RW","LF","RF","LAW","RAW") ~"Pomocnik",TRUE ~ as.character(Position))) %>% mutate(Position=case_when(Position %in% c("CB","RB","LB","RB","RWB","LWB") ~"Obronca",TRUE ~ as.character(Position)))%>% mutate(Position=case_when(Position %in% c("GK") ~"Bramkarz",TRUE ~ as.character(Position)))
+```
+
+```{r}
+#| label: tbl-tabela3
+#| tbl-cap: Podział zawodników na pozycje 
+podział_na_pozycje %>% 
+  select(Player,Country,Team,Position,Overall) %>% 
+  gt(
+    rowname_col = "Player",
+    groupname_col ="Position"
+  ) %>% 
+  tab_style(
+     style = cell_fill(color="#000000"),locations = cells_column_labels(columns = everything())
+    
+  )%>% 
+  tab_style(
+     style = cell_text(color="white"),locations = cells_column_labels(columns = everything())
+    
+  ) %>% 
+  tab_style(
+     style = cell_fill(color="#064A02"),locations = cells_row_groups("Napastnik")
+  ) %>% 
+  tab_style(
+     style = cell_fill(color="#064A02"),locations = cells_row_groups("Pomocnik")
+  ) %>% 
+  tab_style(
+     style = cell_fill(color="#064A02"),locations = cells_row_groups("Bramkarz")
+  ) %>% 
+  tab_style(
+     style = cell_fill(color="#064A02"),locations = cells_row_groups("Obronca")
+  )%>%
+  opt_stylize(style = 1,color = "cyan")%>% 
+  tab_style(
+     style = cell_text(color="white"),locations = cells_row_groups(everything())
+    
+  )%>% 
+  tab_style(
+     style = cell_fill(color="#E0FFFF"),locations = cells_body(columns =everything())
+    
+  )
+```
+
+Wśród 30 najlepszych piłkarzy w FIFA 23 najwięcej zawodników występuje na pozycji pomocnika 12 graczy kolejno 8 na pozycji Bramkarza ,6 Napastnika i 4 na pozycji Obrońcy @fig-Pozycje
+
+```{r}
+#| label: fig-Pozycje
+#| fig-cap: Pozycje
+pozy1=group_by(podział_na_pozycje,Position) %>% 
+  summarise(Liczność=n()) %>% 
+  arrange(Liczność=n()) %>%
+  ggplot(aes(x=reorder(Position,-Liczność),y=Liczność,fill=Position))+geom_col(size=1,width = 1)+
+  geom_text(aes(label=Liczność),color="white",vjust=2)+
+  labs(title = "Ilość Graczy na poszczególnych Pozycjach",
+       x="Pozycja",
+       y="Liczność",
+       fill="Pozycja")+
+  theme(plot.title = element_text(hjust = 0.5))
+pozy1
+```
+
+## Szczegółowe Pozycje Graczy
+
+W grze FIFA, pozycje graczy są szczegółowe @tbl-tabela4, @fig-Pozycje_sz, ponieważ pozwala to na bardziej realistyczne odwzorowanie taktyki i stylów gry zespołów z rzeczywistego świata.Poniżej przedstawię opis szczegółowych pozycji.
+
+**Napastnicy**:
+
+-   ***ST(*** **Striker)*-***oznacza napastnika (ang. ), czyli zawodnika odpowiedzialnego za zdobywanie bramek.
+
+-   ***CF (Center Forward)-*** oznacza skrzydłowego (ang. Center Forward), czyli zawodnika, który gra na pozycji napastnika, ale jest skoncentrowany bardziej na pomocy kolegom z drużyny niż na zdobywaniu bramek.
+
+**Pomocnicy**:
+
+-   **CM (Central Midfielder)** - środkowy pomocnik, odpowiedzialny za rozgrywanie piłki i kreowanie sytuacji bramkowych
+
+-   **CAM (Central Attacking Midfielder)** - ofensywny środkowy pomocnik, odpowiedzialny za kreowanie sytuacji bramkowych i strzelanie goli
+
+-   **CDM (Central Defensive Midfielder)** - defensywny środkowy pomocnik, odpowiedzialny za odbieranie piłki i odpowiednią pozycję na boisku
+
+-   **LW (Left Winger) -** lewy skrzydłowy, odpowiedzialny za dośrodkowania i strzelanie goli.
+
+-   **RW (Right Winger) -** prawy skrzydłowy, odpowiedzialny za dośrodkowania i strzelanie goli
+
+**Obrońcy:**
+
+-   **CB (Center Back) -** środkowy obrońca, odpowiedzialny za obronę i rozgrywanie piłki
+
+-   **RB (Right Back) -** prawy obrońca, odpowiedzialny za obronę i rozgrywanie piłki
+
+-   **LB (Left Back) -** lewy obrońca, odpowiedzialny za obronę i rozgrywanie piłki
+**Bramkarze:**
+-   **GK(Goalkeeper) -** bramkarz,odpowiedzialny za obronę bramki
+
+
+
+```{r}
+#| label: tbl-tabela4
+#| tbl-cap: Podział zawodników na szczegółowe pozycje 
+Wszystko %>% 
+  select(Player,Country,Team,Position,Overall) %>% 
+  gt(
+    rowname_col = "Player",
+    groupname_col ="Position"
+  ) %>% 
+  tab_style(
+     style = cell_text(color="black"),locations = cells_column_labels(columns = everything())
+    
+  ) %>% 
+  tab_style(
+     style = cell_fill(color="#FF61FF"),locations = cells_row_groups("ST")
+  )%>% 
+  tab_style(
+     style = cell_fill(color="#FAA5FA"),locations = cells_row_groups("RW")
+  )%>% 
+  tab_style(
+     style = cell_fill(color="#CB65F0"),locations = cells_row_groups("LW")
+  )%>% 
+  tab_style(
+     style = cell_fill(color="#1C8DFF"),locations = cells_row_groups("LM")
+  )%>% 
+  tab_style(
+     style = cell_fill(color="#80C0FF"),locations = cells_row_groups("LB")
+  )%>% 
+  tab_style(
+     style = cell_fill(color="#3CF5B1"),locations = cells_row_groups("GK")
+  )%>% 
+  tab_style(
+     style = cell_fill(color="#3CF58C"),locations = cells_row_groups("CM")
+  )%>% 
+  tab_style(
+     style = cell_fill(color="#5CEE46"),locations = cells_row_groups("CF")
+  )%>% 
+  tab_style(
+     style = cell_fill(color="#A7BD3B"),locations = cells_row_groups("CDM")
+  )%>% 
+  tab_style(
+     style = cell_fill(color="#ECC219"),locations = cells_row_groups("CB")
+  )%>% 
+  tab_style(
+     style = cell_fill(color="#FF9999"),locations = cells_row_groups("CAM")
+  )%>% 
+  tab_style(
+     style = cell_text(color="white"),locations = cells_row_groups(everything())
+    
+  )
+```
+
+```{r}
+#| label: fig-Pozycje_sz
+#| fig-cap: Pozycje_sz
+fuj=group_by(Wszystko,Position) %>% 
+  summarise(Liczność=n()) %>% 
+  arrange(Liczność=n()) %>% 
+  ggplot(aes(x=reorder(Position, -Liczność),y=Liczność,fill=Position))+
+  geom_bar(stat = "identity")+
+  labs(title = "Szczegółowe Pozycje Graczy",
+       x="Pozycja",
+       y="Liczność",
+       fill="Pozycja")+
+  theme(plot.title = element_text(hjust = 0.5))
+fuj
+```
+
+## Podział na klub
+
+Spośród 30 najlepszych zawodników w Fifa 23 prawie połowa z nich bo aż 12 pochodzi z tylko z dwóch klubów Paris Saint-Germain oraz Manchester City z każdego po 6 zawodników @fig-Klub,pokazuje to jak mocne są to zespoły i jak dobrych zawodników mają w swoim zespole.
+
+```{r}
+#| label: tbl-tabela5
+#| tbl-cap: Podział zawodników na Klub
+Wszystko %>% 
+  select(Player,Country,Team,Position,Overall) %>% 
+  gt(
+    rowname_col = "Player",
+    groupname_col ="Team"
+  ) %>% 
+  tab_style(
+     style = cell_fill(color="#AFEFA2"),locations = cells_column_labels(columns = everything())
+  )%>% 
+  tab_style(
+     style = cell_text(color="#064A02"),locations = cells_column_labels(columns = everything())
+    
+  ) %>%
+    tab_style(
+     style = cell_fill(color="#064A02"),locations = cells_row_groups( everything())
+     
+     
+     
+     
+     )%>% 
+  tab_style(
+     style = cell_text(color="#AFEFA2"),locations = cells_row_groups(everything())
+    
+  )%>%
+  opt_stylize(style = 1,color = "green")%>% 
+  tab_style(
+     style = cell_fill(color="#AFEFA2"),locations = cells_body(columns =everything())
+    
+  )
+  
+```
+
+```{r}
+#| label: fig-Klub
+#| fig-cap: Klub
+dt=Wszystko %>% 
+  count(Team) %>% 
+  drop_na() 
+dx=dt %>% 
+  mutate(Team=factor(Team,level=fct_reorder(Team,n) %>% 
+           levels())) %>% 
+  ggplot(aes(Team,y=n,fill=n))+ 
+  geom_bar(stat = "identity")+
+  theme(axis.text.x = element_text(angle=0  ),legend.position = 'none')+
+  scale_y_continuous(breaks = seq(0,10,1))+
+  labs(title = "Podział na kluby ",
+       x="Klub",
+       y="Liczność",
+       fill="Klub")+
+  geom_text(aes(label=n))+
+  coord_flip()+
+  theme(plot.title = element_text(hjust = 0.5))
+ggplotly(dx)
+```
+
+## Podział na narodowość
+
+Wykres @fig-Narodowosc pokazuje pochodzenie graczy z Top 30 na pierwszym miejscu znajduje się Brazylia mająca w składzie wiele wspaniałych piłkarzy takich jak:Neymar Jr, Casemiro, Alisson, Ederson czy chociażby jeden z najlepszych środkowych obrońców Marquinhos @tbl-tabela6 .Wśród wspomnianego wyżej rankingu znajduje się jeden zawodnik reprezentujący narodowość Polski mianowicie Robert Lewandowski.Na wykresie poniżej widnieje również podział na dany kontynent widać z niego ze znaczna część najlepszych pilkarzy pochodzi z Europy.
+
+```{r}
+kontynent=countrycode(dom$skrót_country_dt,"iso2c","continent")
+
+dom_z_kontynent=dom %>% mutate(kontynent)
+sz=dom_z_kontynent %>% count(kontynent)
+```
+```{r}
+#| label: tbl-tabela6
+#| tbl-cap: Podział zawodników na Narodowość
+Wszystko %>% 
+  select(Player,Country,Team,Position,Overall) %>% 
+  gt(
+    rowname_col = "Player",
+    groupname_col ="Country"
+  ) %>% 
+  tab_style(
+     style = cell_fill(color="#FFCCCC"),locations = cells_column_labels(columns = everything())
+  )%>% 
+  tab_style(
+     style = cell_text(color="#064A02"),locations = cells_column_labels(columns = everything())
+    
+  ) %>%
+    tab_style(
+     style = cell_fill(color="#FF9999"),locations = cells_row_groups( everything())
+     
+     
+     
+     
+     )%>% 
+  tab_style(
+     style = cell_text(color="black"),locations = cells_row_groups(everything())
+    
+  )%>%
+  opt_stylize(style = 1,color = "gray")%>% 
+  tab_style(
+     style = cell_fill(color="#FFCCCC"),locations = cells_body(columns =everything())
+    
+  )
+```
+
+```{r}
+#| label: fig-Narodowosc
+#| fig-cap: Narodowosc
+my_palette <- c("Americas" = "#0084ff", "Asia" = "#44bec7", "Europe" = "#ffc300", "Africa" = "#fa3c4c")
+dx=dom_z_kontynent  %>%
+  ggplot(aes(x=reorder(Country,Number),y=Number))+
+  geom_col(aes(fill=kontynent))+
+  geom_flag(y=-0.2,aes(image=skrót_country_dt))+
+  coord_flip()+
+  expand_limits(y = -0.2) +
+  labs(title = "Wykres podziału na Państwa",
+       x="Państwo",
+       y="Liczność",
+       fill="Kontynent")+ scale_fill_manual(values = my_palette)+
+  geom_text(aes(label=Number),color="black")+
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+dx
+```
+
+
+## Overall trzech Najlepszych piłkarzy w Fifie na przestrzeni lat.
+
+W tabeli @tbl-tabela7 widnieją ogólne oceny 3 graczy Roberta Lewandowskiego,Kylian Mbappé i Kevin De Bruyne.
+Pochodzą one z poszczególnych edycji gry Fifa począwszy na Fifie 16 której premiera miała w 2015 roku aż do obecnej edycji Fifa 23.Na wykresie @fig-Fifa widzimy jak Robert Lewandowski i Kevin De Bruyne od lat  utrzymują wysoki poziom sportowy i mają ocenę ogólna w granicach 90 punktów.Kylian Mbappé z racji swojego młodego wieku z każdą nową edycją gry Fifa progresował zaczynając od 65 Overalla w Fifie 16 kończąc na 91  w Fifach 22,23.
+```{r}
+#| label: tbl-tabela7
+#| tbl-cap: Overall w poszczególnych fifach 
+statystyki_trzech=read_excel("podział_nafify.xlsx")
+statystyki_trzech %>% 
+  gt(rowname_col = "Fifa",
+     groupname_col = "Player"
+                         
+                         )%>% 
+  tab_style(
+     style = cell_fill(color="#FFCCFF"),locations = cells_column_labels(columns = everything())
+  )%>% 
+  tab_style(
+     style = cell_text(color="black"),locations = cells_column_labels(columns = everything())
+    
+  ) %>%
+    tab_style(
+     style = cell_fill(color="#660066"),locations = cells_row_groups( everything())
+     
+     
+     
+     
+     )%>% 
+  tab_style(
+     style = cell_text(color="white"),locations = cells_row_groups(everything())
+    
+  )%>%
+  opt_stylize(style = 1,color = "pink")%>% 
+  tab_style(
+     style = cell_fill(color="#FFCCFF"),locations = cells_body(columns =everything())
+    
+  )
+
+
+```
+
+```{r}
+#| label: fig-Fifa
+#| fig-cap: Fifa
+Wykres_trzech= ggplot(statystyki_trzech,aes(x=Fifa,y=Overall,color=Player))+
+  geom_line()+
+  geom_point()
+ggplotly(Wykres_trzech)
+```
+
+
+
+
